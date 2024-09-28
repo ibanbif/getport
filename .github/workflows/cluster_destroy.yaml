@@ -1,0 +1,67 @@
+name: Approve and Destroy Terraform Resource
+on:
+  workflow_dispatch:
+    inputs:
+      port_run_identifier:
+        type: string
+        required: true
+        description: identificador run de port
+      artifact_identifier:
+        type: string
+        required: true
+        description: identificador de artifact
+      tf_plan_output:
+        type: string
+        description: salida de terraform
+      port_context:
+        required: true
+        description: >-
+          Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
+jobs:
+  destroy-and-provision-resource:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log starting of cloud resource creation 
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              About to provision a cloud resource previously planned in Port with run ID: ${{ github.event.inputs.port_run_identifier }} ... ⛴️
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          aws-region: '${{ secrets.AWS_REGION }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.6
+
+      - name: Terraform Backend
+        id: backend
+        env:
+          TF_VAR_project:  "${{ github.event.inputs.project }}"
+          TF_VAR_env:  "${{ github.event.inputs.env }}"
+          TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
+        run: |
+          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}/g' terraform/config.remote.tfbackend
+          sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
+          mv terraform/config.remote.tfbackend terraform/vpc/
+          mv terraform/terraformrc ${HOME}/.terraformrc
+
+      - name: Terraform apply resource
+        id: tf-apply
+        run: |
+          cd terraform/vpc/
+          terraform init -backend-config=config.remote.tfbackend
+          terraform destroy -auto-approve
