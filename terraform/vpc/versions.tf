@@ -4,4 +4,6 @@ terraform {
   required_providers {
     aws = ">= 5.60.0"
   }
+  
+  backend "remote" {}
 }
