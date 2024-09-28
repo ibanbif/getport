@@ -99,6 +99,7 @@ jobs:
           baseUrl: https://api.getport.io
           operation: UPSERT
           identifier: ${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}
+          team: '["cloud"]'
           blueprint: VpcResource
           properties: |-
             {
