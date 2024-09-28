@@ -130,7 +130,7 @@ jobs:
           operation: CREATE_RUN
           icon: GithubActions
           blueprint: service
-          action: cluster_apply
+          action: vpc_apply
           properties: |-
             {
               "port_run_identifier": "${{ fromJson(inputs.port_context).runId }}",
