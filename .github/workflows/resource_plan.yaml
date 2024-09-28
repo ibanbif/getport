@@ -37,7 +37,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              About to create an resource with name: ${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.env }} ... ⛴️
+              About to create an resource with name: ${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }} ... ⛴️
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -58,7 +58,7 @@ jobs:
           TF_VAR_env:  "${{ github.event.inputs.env }}"
           TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
-          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}/g' terraform/config.remote.tfbackend
+          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}/g' terraform/config.remote.tfbackend
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
           mv terraform/config.remote.tfbackend terraform/${{ github.event.inputs.template }}/
           mv terraform/terraformrc ${HOME}/.terraformrc
@@ -135,6 +135,10 @@ jobs:
             {
               "port_run_identifier": "${{ fromJson(inputs.port_context).runId }}",
               "artifact_identifier": "${{ steps.artifact-upload-step.outputs.artifact-id }}",
+              "project": "${{ github.event.inputs.project }}",
+              "env": "${{ github.event.inputs.env }}",
+              "service": "${{ github.event.inputs.service }}",
+              "template": "${{ github.event.inputs.template }}",
               "tf_plan_output": ${{ env.TF_PLAN_JSON }}
             }
     

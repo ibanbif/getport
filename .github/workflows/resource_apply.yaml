@@ -13,6 +13,22 @@ on:
       tf_plan_output:
         type: string
         description: salida de terraform
+      project:
+        type: string
+        description: Nombre de proyecto
+        required: true
+      env:
+        type: string
+        description: Nombre de ambiente
+        required: true
+      service:
+        type: string
+        description: Nombre del servicio
+        default: vpc
+      template:
+        type: string
+        description: Nombre de la plantilla
+        required: true
       port_context:
         required: true
         description: >-
@@ -74,7 +90,7 @@ jobs:
           TF_VAR_env:  "${{ github.event.inputs.env }}"
           TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
-          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}/g' terraform/config.remote.tfbackend
+          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}/g' terraform/config.remote.tfbackend
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
           mv terraform/config.remote.tfbackend terraform/${{ github.event.inputs.template }}/
           mv terraform/terraformrc ${HOME}/.terraformrc
