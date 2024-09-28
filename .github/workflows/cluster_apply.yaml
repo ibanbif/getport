@@ -68,7 +68,7 @@ jobs:
           terraform_version: 1.9.6
 
       - name: Terraform Backend
-        id:   plan
+        id: backend
         env:
           TF_VAR_project:  "${{ github.event.inputs.project }}"
           TF_VAR_env:  "${{ github.event.inputs.env }}"
@@ -80,7 +80,7 @@ jobs:
           mv terraformrc ${HOME}/.terraformrc
 
       - name: Terraform apply resource
-        id:   tf-apply
+        id: tf-apply
         run: |
           cd terraform-artifact
           terraform init -backend-config=config.remote.tfbackend

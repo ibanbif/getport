@@ -44,7 +44,7 @@ jobs:
           terraform_version: 1.9.6
 
       - name: Terraform Backend
-        id:   plan
+        id: backend
         env:
           TF_VAR_project:  "${{ github.event.inputs.project }}"
           TF_VAR_env:  "${{ github.event.inputs.env }}"
@@ -56,7 +56,7 @@ jobs:
           mv terraformrc ${HOME}/.terraformrc
 
       - name: Terraform Plan
-        id:   plan
+        id: plan
         env:
           TF_VAR_project:  "${{ github.event.inputs.project }}"
           TF_VAR_env:  "${{ github.event.inputs.env }}"
