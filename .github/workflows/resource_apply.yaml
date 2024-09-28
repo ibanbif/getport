@@ -137,7 +137,8 @@ jobs:
               "link": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:tag:Name=${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
               "created_at": "${{ steps.timestamp.outputs.current_time }}",
               "project": "${{ fromJson(inputs.tf_plan_output).variables.project.value }}",
-              "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}"
+              "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
+              "template": "${{ fromJson(inputs.tf_plan_output).variables.template.value }}"
             }
 
       - name: Update Port on status of applying terraform resource (failure)
