@@ -72,7 +72,7 @@ jobs:
         run: |
           cd terraform/${{ github.event.inputs.template }}/
           terraform init -backend-config=config.remote.tfbackend
-          curl -s --header "Authorization: Bearer ${{ secrets.TF_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"type":"workspaces","attributes":{"execution-mode":"local"}}}' "https://app.terraform.io/api/v2/organizations/punkerside/workspaces/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TF_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"type":"workspaces","attributes":{"execution-mode":"local"}}}' "https://app.terraform.io/api/v2/organizations/punkerside/workspaces/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}"
           terraform validate
           terraform plan \
             -input=false \
