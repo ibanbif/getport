@@ -105,7 +105,7 @@ jobs:
               "type": "storage",
               "provider": "AWS",
               "region": "${{ secrets.AWS_REGION }}",
-              "link": "https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}/services?region=us-east-1",
+              "link": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:tag:Name=${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
               "created_at": "${{ steps.timestamp.outputs.current_time }}"
             }
 
