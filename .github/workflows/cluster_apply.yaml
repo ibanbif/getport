@@ -71,6 +71,7 @@ jobs:
         id:   tf-apply
         run: |
           cd terraform-artifact
+          terraform init
           terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
           
       - name: Update Port on status of applying terraform resource (success)
