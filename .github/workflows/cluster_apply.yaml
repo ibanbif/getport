@@ -67,11 +67,31 @@ jobs:
         with:
           terraform_version: 1.9.6
 
+      - name: Terraform Backend
+        id:   plan
+        env:
+          TF_VAR_project:  "${{ github.event.inputs.project }}"
+          TF_VAR_env:  "${{ github.event.inputs.env }}"
+          TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
+        run: |
+          # creando tfbackend
+          cat << EOF > cd terraform/vpc/config.remote.tfbackend
+          workspaces { name = "${{ github.event.inputs.project }}-${{ github.event.inputs.env }}" }
+          hostname     = "app.terraform.io"
+          organization = "punkerside"
+          EOF
+          # creando terraformrc
+          cat << EOF > ${HOME}/terraformrc
+          credentials "app.terraform.io" {
+            token = "${{ secrets.TF_TOKEN }}"
+          }
+          EOF
+
       - name: Terraform apply resource
         id:   tf-apply
         run: |
           cd terraform-artifact
-          terraform init
+          terraform init -backend-config=config.remote.tfbackend
           terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
           
       - name: Update Port on status of applying terraform resource (success)
