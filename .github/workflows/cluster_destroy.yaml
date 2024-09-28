@@ -55,3 +55,12 @@ jobs:
           cd terraform/vpc/
           terraform init -backend-config=config.remote.tfbackend
           terraform destroy -auto-approve
+
+      - uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: DELETE
+          identifier: ${{ github.event.inputs.project }}-${{ github.event.inputs.env }}
+          blueprint: VpcResource
