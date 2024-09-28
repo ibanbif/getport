@@ -52,7 +52,7 @@ jobs:
         run: |
           sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}/g' terraform/config.remote.tfbackend
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
-          mv config.remote.tfbackend terraform/vpc/
+          mv terraform/config.remote.tfbackend terraform/vpc/
           mv terraformrc ${HOME}/.terraformrc
 
       - name: Terraform Plan
