@@ -61,7 +61,7 @@ jobs:
       - name: Save Terraform Plan JSON to Environment Variable
         id: save-plan-json
         run: |
-          cd terraform
+          cd terraform/vpc/
           TF_PLAN_JSON=$(<tfplan.json)
           echo "TF_PLAN_JSON=$TF_PLAN_JSON" >> $GITHUB_ENV
           
