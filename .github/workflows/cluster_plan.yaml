@@ -109,7 +109,7 @@ jobs:
           operation: CREATE_RUN
           icon: GithubActions
           blueprint: service
-          action: apply_terraform_resource
+          action: cluster_apply
           properties: |-
             {
               "port_run_identifier": "${{ fromJson(inputs.port_context).runId }}",
