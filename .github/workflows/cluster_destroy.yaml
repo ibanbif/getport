@@ -1,4 +1,4 @@
-name: Plan a Cloud Resource using Terraform
+name: Destroy a Cloud Resource using Terraform
 on:
   workflow_dispatch:
     inputs:
