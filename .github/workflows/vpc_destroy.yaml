@@ -64,8 +64,14 @@ jobs:
       - name: Terraform Destroy
         id: destroy
         env:
-          TF_VAR_project:  "${{ github.event.inputs.project }}"
-          TF_VAR_env:  "${{ github.event.inputs.env }}"
+          TF_VAR_project: "${{ github.event.inputs.project }}"
+          TF_VAR_env: "${{ github.event.inputs.env }}"
+          TF_VAR_service: "${{ github.event.inputs.service }}"
+          TF_VAR_cidr_block_vpc: "${{ github.event.inputs.cidr_block_vpc }}"
+          TF_VAR_cidr_block_pri: "${{ github.event.inputs.cidr_block_pri }}"
+          TF_VAR_cidr_block_pub: "${{ github.event.inputs.cidr_block_pub }}"
+          TF_VAR_enable_dns_support: "${{ github.event.inputs.enable_dns_support }}"
+          TF_VAR_enable_dns_hostnames: "${{ github.event.inputs.enable_dns_hostnames }}"
           TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
           cd terraform/vpc/
