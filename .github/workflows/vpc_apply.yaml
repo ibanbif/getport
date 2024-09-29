@@ -18,10 +18,10 @@ on:
         description: none
       cidr_block_pri:
         description: none
-        default: '["10.0.0.0/18","10.0.64.0/18"]'
+        # default: '["10.0.0.0/18","10.0.64.0/18"]'
       cidr_block_pub:
         description: none
-        default: '["10.0.128.0/18","10.0.192.0/18"]'
+        # default: '["10.0.128.0/18","10.0.192.0/18"]'
 
 jobs:
   apply:
