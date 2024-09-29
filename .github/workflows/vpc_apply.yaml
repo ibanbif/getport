@@ -112,6 +112,7 @@ jobs:
               "provider": "AWS",
               "region": "${{ secrets.AWS_REGION }}",
               "link": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:tag:Name=${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
+              "status": "active",
               "created_at": "${{ steps.timestamp.outputs.current_time }}",
               "project": "${{ fromJson(inputs.tf_plan_output).variables.project.value }}",
               "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
