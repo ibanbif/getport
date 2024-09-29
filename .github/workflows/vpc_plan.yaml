@@ -4,27 +4,33 @@ on:
     inputs:
       project:
         type: string
-        description: Nombre de proyecto
+        description: None
         required: true
       env:
         type: string
-        description: Nombre de ambiente
+        description: None
         required: true
       service:
         type: string
-        description: Nombre del servicio
-        default: vpc
-      template:
+        description: None
+      cidr_block_vpc:
         type: string
-        description: Nombre de la plantilla
+        description: None
+        required: true
+      cidr_block_pri:
+        type: string
+        description: None
+        required: true
+      cidr_block_pub:
+        type: string
+        description: None
         required: true
       port_context:
         required: true
-        description: >-
-          Port's payload, including details for who triggered the action and
-          general context (blueprint, run id, etc...)
+        description: None
+
 jobs:
-  plan-and-request-approval-for-bucket:
+  plan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +43,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              About to create an resource with name: ${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }} ... ⛴️
+              Se creara el recurso con nombre: ${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }} ... ⛴️
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -53,14 +59,14 @@ jobs:
 
       - name: Terraform Backend
         id: backend
-        env:
-          TF_VAR_project:  "${{ github.event.inputs.project }}"
-          TF_VAR_env:  "${{ github.event.inputs.env }}"
-          TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
+        # env:
+        #   TF_VAR_project:  "${{ github.event.inputs.project }}"
+        #   TF_VAR_env:  "${{ github.event.inputs.env }}"
+        #   TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
           sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}/g' terraform/config.remote.tfbackend
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
-          mv terraform/config.remote.tfbackend terraform/${{ github.event.inputs.template }}/
+          mv terraform/config.remote.tfbackend terraform/vpc/
           mv terraform/terraformrc ${HOME}/.terraformrc
 
       - name: Terraform Plan
@@ -68,21 +74,23 @@ jobs:
         env:
           TF_VAR_project:  "${{ github.event.inputs.project }}"
           TF_VAR_env:  "${{ github.event.inputs.env }}"
+          TF_VAR_service:  "${{ github.event.inputs.service }}"
+          TF_VAR_cidr_block_vpc:  "${{ github.event.inputs.cidr_block_vpc }}"
+          TF_VAR_cidr_block_pri:  "${{ github.event.inputs.cidr_block_pri }}"
+          TF_VAR_cidr_block_pub:  "${{ github.event.inputs.cidr_block_pub }}"
           TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
-          cd terraform/${{ github.event.inputs.template }}/
+          cd terraform/vpc/
           terraform init -backend-config=config.remote.tfbackend
           curl -s --header "Authorization: Bearer ${{ secrets.TF_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"type":"workspaces","attributes":{"execution-mode":"local"}}}' "https://app.terraform.io/api/v2/organizations/punkerside/workspaces/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}"
           terraform validate
-          terraform plan \
-            -input=false \
-            -out=tfplan-${{fromJson(inputs.port_context).runId}}
+          terraform plan -input=false -out=tfplan-${{fromJson(inputs.port_context).runId}}
           terraform show -json tfplan-${{fromJson(inputs.port_context).runId}} > tfplan.json
 
       - name: Save Terraform Plan JSON to Environment Variable
         id: save-plan-json
         run: |
-          cd terraform/${{ github.event.inputs.template }}/
+          cd terraform/vpc/
           TF_PLAN_JSON=$(<tfplan.json)
           echo "TF_PLAN_JSON=$TF_PLAN_JSON" >> $GITHUB_ENV
           
@@ -91,7 +99,7 @@ jobs:
         id: artifact-upload-step
         with:
           name: tfplan-${{fromJson(inputs.port_context).runId}}
-          path: terraform/${{ github.event.inputs.template }}/
+          path: terraform/vpc/
           retention-days: 7
       
       - name: Update Port on successful plan and upload of terraform resource
@@ -104,8 +112,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              resource planned successfully and uploaded to GitHub artifact. Proceeding to request approval to apply the plan: ${{ steps.plan.outputs.stdout }} ✅
-
+              recurso planificado con éxito y cargado en el artefacto de GitHub. Se procede a solicitar la aprobación para aplicar el plan: ${{ steps.plan.outputs.stdout }} ✅
       
       - name: Update Port on unsuccessful plan of terraform resource
         if: ${{ steps.plan.outcome != 'success' || steps.artifact-upload-step.outcome != 'success' }}
@@ -117,7 +124,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              Error Occured while planning or saving terraform resource. Aborting request to approve the plan
+              se produjo un error al planificar o guardar el recurso Terraform. Aborting request to approve the plan
 
       - name: Request approval to apply Terraform resource
         if: ${{ steps.plan.outcome == 'success' && steps.artifact-upload-step.outcome == 'success' }}
@@ -138,7 +145,9 @@ jobs:
               "project": "${{ github.event.inputs.project }}",
               "env": "${{ github.event.inputs.env }}",
               "service": "${{ github.event.inputs.service }}",
-              "template": "${{ github.event.inputs.template }}",
+              "cidr_block_vpc": "${{ github.event.inputs.cidr_block_vpc }}",
+              "cidr_block_pri": "${{ github.event.inputs.cidr_block_pri }}",
+              "cidr_block_pub": "${{ github.event.inputs.cidr_block_pub }}",
               "tf_plan_output": ${{ env.TF_PLAN_JSON }}
             }
     
@@ -152,7 +161,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              The request to provision and apply the cloud resource has been sent to the approval team. The status of request will be shared in the action log
+              la solicitud para aprovisionar y aplicar el recurso en la nube se ha enviado al equipo de aprobación. El estado de la solicitud se compartirá en el registro de acciones
 
       - name: Log message to update Port on the status of the TF Apply request (failure)
         uses: port-labs/port-github-action@v1
@@ -164,4 +173,4 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              The request to provision and apply the cloud resource has not been sent to the approval team due to an error that occurred during the creation steps
+              la solicitud para aprovisionar y aplicar el recurso en la nube no se ha enviado al equipo de aprobación debido a un error que ocurrió durante los pasos de creación

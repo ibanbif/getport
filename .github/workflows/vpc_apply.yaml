@@ -5,37 +5,36 @@ on:
       port_run_identifier:
         type: string
         required: true
-        description: identificador run de port
+        description: none
       artifact_identifier:
         type: string
         required: true
-        description: identificador de artifact
+        description: none
       tf_plan_output:
         type: string
-        description: salida de terraform
-      project:
-        type: string
-        description: Nombre de proyecto
-        required: true
-      env:
-        type: string
-        description: Nombre de ambiente
-        required: true
-      service:
-        type: string
-        description: Nombre del servicio
-        default: vpc
-      template:
-        type: string
-        description: Nombre de la plantilla
-        required: true
+        description: none
+      # project:
+      #   type: string
+      #   description: Nombre de proyecto
+      #   required: true
+      # env:
+      #   type: string
+      #   description: Nombre de ambiente
+      #   required: true
+      # service:
+      #   type: string
+      #   description: Nombre del servicio
+      #   default: vpc
+      # template:
+      #   type: string
+      #   description: Nombre de la plantilla
+      #   required: true
       port_context:
         required: true
-        description: >-
-          Port's payload, including details for who triggered the action and
-          general context (blueprint, run id, etc...)
+        description: none
+
 jobs:
-  apply-and-provision-resource:
+  apply:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +48,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              About to provision a cloud resource previously planned in Port with run ID: ${{ github.event.inputs.port_run_identifier }} ... ⛴️
+              Aprovisionar un recurso en la nube previamente planificado en Port con ID de ejecución: ${{ github.event.inputs.port_run_identifier }} ... ⛴️
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -57,7 +56,6 @@ jobs:
           aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
           aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           aws-region: '${{ secrets.AWS_REGION }}'
-
 
       - name: Download Terraform plan artifact from the previous workflow run
         run: |          
@@ -74,9 +72,9 @@ jobs:
             echo "Failed to extract artifact. Exiting."
             exit 1
           fi
-        
-      - name: List contents of working directory
-        run: ls -la terraform-artifact
+
+      # - name: List contents of working directory
+      #   run: ls -la terraform-artifact
         
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -85,14 +83,12 @@ jobs:
 
       - name: Terraform Backend
         id: backend
-        env:
-          TF_VAR_project:  "${{ github.event.inputs.project }}"
-          TF_VAR_env:  "${{ github.event.inputs.env }}"
-          TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
+        # env:
+        #   TF_VAR_project:  "${{ github.event.inputs.project }}"
+        #   TF_VAR_env:  "${{ github.event.inputs.env }}"
+        #   TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
-          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}/g' terraform/config.remote.tfbackend
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
-          mv terraform/config.remote.tfbackend terraform/${{ github.event.inputs.template }}/
           mv terraform/terraformrc ${HOME}/.terraformrc
 
       - name: Terraform apply resource
@@ -101,7 +97,7 @@ jobs:
           cd terraform-artifact
           terraform init -backend-config=config.remote.tfbackend
           terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
-          
+
       - name: Update Port on status of applying terraform resource (success)
         uses: port-labs/port-github-action@v1
         if: ${{steps.tf-apply.outcome == 'success'}}
@@ -112,7 +108,7 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              cloud resource successfully approved and provisioned ✅
+              recurso en la nube aprobado y aprovisionado exitosamente ✅
 
       - name: Get current timestamp
         id: timestamp
@@ -136,10 +132,12 @@ jobs:
               "region": "${{ secrets.AWS_REGION }}",
               "link": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:tag:Name=${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
               "created_at": "${{ steps.timestamp.outputs.current_time }}",
-              "project": "${{ github.event.inputs.project }}",
-              "env": "${{ github.event.inputs.env }}",
-              "template": "${{ github.event.inputs.template }}",
-              "service": "${{ github.event.inputs.service }}"
+              "project": "${{ fromJson(inputs.tf_plan_output).variables.project.value }}",
+              "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
+              "service": "${{ fromJson(inputs.tf_plan_output).variables.service.value }}",
+              "cidr_block_vpc": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_vpc.value }}",
+              "cidr_block_pri": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pri.value }}",
+              "cidr_block_pub": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pub.value }}"
             }
 
       - name: Update Port on status of applying terraform resource (failure)
@@ -152,4 +150,4 @@ jobs:
           operation: PATCH_RUN
           runId: ${{fromJson(inputs.port_context).runId}}
           logMessage: |
-              cloud resource could not be provisioned
+              no se pudo aprovisionar el recurso en la nube
