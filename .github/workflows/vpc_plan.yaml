@@ -141,7 +141,9 @@ jobs:
             {
               "port_run_identifier": "${{ fromJson(inputs.port_context).runId }}",
               "artifact_identifier": "${{ steps.artifact-upload-step.outputs.artifact-id }}",
-              "tf_plan_output": ${{ env.TF_PLAN_JSON }}
+              "tf_plan_output": ${{ env.TF_PLAN_JSON }},
+              "cidr_block_pri": ${{ github.event.inputs.cidr_block_pri }},
+              "cidr_block_pub": ${{ github.event.inputs.cidr_block_pub }}
             }
     
       - name: Log message to update Port on the status of the TF Apply request (success)
