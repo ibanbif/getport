@@ -99,7 +99,7 @@ jobs:
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           baseUrl: https://api.getport.io
           operation: UPSERT
-          identifier: ${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}-${{ fromJson(inputs.tf_plan_output).variables.service.value }}
+          identifier: ${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}
           team: '["cloud"]'
           blueprint: VpcResource
           properties: |-
