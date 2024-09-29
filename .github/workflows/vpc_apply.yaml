@@ -13,22 +13,6 @@ on:
       tf_plan_output:
         type: string
         description: none
-      # project:
-      #   type: string
-      #   description: Nombre de proyecto
-      #   required: true
-      # env:
-      #   type: string
-      #   description: Nombre de ambiente
-      #   required: true
-      # service:
-      #   type: string
-      #   description: Nombre del servicio
-      #   default: vpc
-      # template:
-      #   type: string
-      #   description: Nombre de la plantilla
-      #   required: true
       port_context:
         required: true
         description: none
@@ -72,9 +56,6 @@ jobs:
             echo "Failed to extract artifact. Exiting."
             exit 1
           fi
-
-      # - name: List contents of working directory
-      #   run: ls -la terraform-artifact
         
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -83,10 +64,6 @@ jobs:
 
       - name: Terraform Backend
         id: backend
-        # env:
-        #   TF_VAR_project:  "${{ github.event.inputs.project }}"
-        #   TF_VAR_env:  "${{ github.event.inputs.env }}"
-        #   TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
           mv terraform/terraformrc ${HOME}/.terraformrc

@@ -5,26 +5,27 @@ on:
       project:
         type: string
         description: None
-        required: true
       env:
         type: string
         description: None
-        required: true
       service:
         type: string
         description: None
       cidr_block_vpc:
         type: string
         description: None
-        required: true
       cidr_block_pri:
         type: string
         description: None
-        required: true
       cidr_block_pub:
         type: string
         description: None
-        required: true
+      enable_dns_support:
+        type: boolean
+        description: None
+      enable_dns_hostnames:
+        type: boolean
+        description: None
       port_context:
         required: true
         description: None
@@ -59,10 +60,6 @@ jobs:
 
       - name: Terraform Backend
         id: backend
-        # env:
-        #   TF_VAR_project:  "${{ github.event.inputs.project }}"
-        #   TF_VAR_env:  "${{ github.event.inputs.env }}"
-        #   TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
           sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-${{ github.event.inputs.service }}/g' terraform/config.remote.tfbackend
           sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
@@ -72,12 +69,14 @@ jobs:
       - name: Terraform Plan
         id: plan
         env:
-          TF_VAR_project:  "${{ github.event.inputs.project }}"
-          TF_VAR_env:  "${{ github.event.inputs.env }}"
-          TF_VAR_service:  "${{ github.event.inputs.service }}"
-          TF_VAR_cidr_block_vpc:  "${{ github.event.inputs.cidr_block_vpc }}"
-          TF_VAR_cidr_block_pri:  "${{ github.event.inputs.cidr_block_pri }}"
-          TF_VAR_cidr_block_pub:  "${{ github.event.inputs.cidr_block_pub }}"
+          TF_VAR_project: "${{ github.event.inputs.project }}"
+          TF_VAR_env: "${{ github.event.inputs.env }}"
+          TF_VAR_service: "${{ github.event.inputs.service }}"
+          TF_VAR_cidr_block_vpc: "${{ github.event.inputs.cidr_block_vpc }}"
+          TF_VAR_cidr_block_pri: "${{ github.event.inputs.cidr_block_pri }}"
+          TF_VAR_cidr_block_pub: "${{ github.event.inputs.cidr_block_pub }}"
+          TF_VAR_enable_dns_support: "${{ github.event.inputs.enable_dns_support }}"
+          TF_VAR_enable_dns_hostnames: "${{ github.event.inputs.enable_dns_hostnames }}"
           TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
         run: |
           cd terraform/vpc/
@@ -142,12 +141,6 @@ jobs:
             {
               "port_run_identifier": "${{ fromJson(inputs.port_context).runId }}",
               "artifact_identifier": "${{ steps.artifact-upload-step.outputs.artifact-id }}",
-              "project": "${{ github.event.inputs.project }}",
-              "env": "${{ github.event.inputs.env }}",
-              "service": "${{ github.event.inputs.service }}",
-              "cidr_block_vpc": "${{ github.event.inputs.cidr_block_vpc }}",
-              "cidr_block_pri": "${{ github.event.inputs.cidr_block_pri }}",
-              "cidr_block_pub": "${{ github.event.inputs.cidr_block_pub }}",
               "tf_plan_output": ${{ env.TF_PLAN_JSON }}
             }
     
