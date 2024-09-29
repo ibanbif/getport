@@ -114,7 +114,9 @@ jobs:
               "service": "${{ fromJson(inputs.tf_plan_output).variables.service.value }}",
               "cidr_block_vpc": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_vpc.value }}",
               "cidr_block_pri": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pri.value }}",
-              "cidr_block_pub": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pub.value }}"
+              "cidr_block_pub": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pub.value }}",
+              "enable_dns_support": "${{ fromJson(inputs.tf_plan_output).variables.enable_dns_support.value }}",
+              "enable_dns_hostnames": "${{ fromJson(inputs.tf_plan_output).variables.enable_dns_hostnames.value }}"
             }
 
       - name: Update Port on status of applying terraform resource (failure)
