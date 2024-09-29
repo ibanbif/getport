@@ -8,8 +8,7 @@ variable "env" {
 }
 
 variable "service" {
-  type    = string
-  default = "vpc"
+  type = string
 }
 
 variable "cidr_block_vpc" {
@@ -25,11 +24,6 @@ variable "cidr_block_pri" {
 variable "cidr_block_pub" {
   type    = list(string)
   # default = ["10.0.128.0/18", "10.0.192.0/18"]
-}
-
-variable "domain" {
-  type    = string
-  default = null
 }
 
 variable "enable_dns_support" {
