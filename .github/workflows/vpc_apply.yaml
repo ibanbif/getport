@@ -71,6 +71,8 @@ jobs:
       - name: Terraform apply resource
         id: tf-apply
         run: |
+          echo "cidr_block_pri: ${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pri.value }}"
+          echo "cidr_block_pub: ${{ fromJson(inputs.tf_plan_output).variables.cidr_block_pub.value }}"
           cd terraform-artifact
           terraform init -backend-config=config.remote.tfbackend
           terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
