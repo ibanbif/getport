@@ -32,7 +32,7 @@ on:
           Port's payload, including details for who triggered the action and
           general context (blueprint, run id, etc...)
 jobs:
-  plan-and-request-approval-for-bucket:
+  destroy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
