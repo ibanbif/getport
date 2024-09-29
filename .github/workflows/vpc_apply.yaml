@@ -115,7 +115,6 @@ jobs:
               "created_at": "${{ steps.timestamp.outputs.current_time }}",
               "project": "${{ fromJson(inputs.tf_plan_output).variables.project.value }}",
               "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
-              "service": "${{ fromJson(inputs.tf_plan_output).variables.service.value }}",
               "cidr_block_vpc": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_vpc.value }}",
               "cidr_block_pri": ${{ github.event.inputs.cidr_block_pri }},
               "cidr_block_pub": ${{ github.event.inputs.cidr_block_pub }},
