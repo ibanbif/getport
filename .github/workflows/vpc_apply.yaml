@@ -121,8 +121,8 @@ jobs:
               "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
               "service": "${{ fromJson(inputs.tf_plan_output).variables.service.value }}",
               "cidr_block_vpc": "${{ fromJson(inputs.tf_plan_output).variables.cidr_block_vpc.value }}",
-              "cidr_block_pri": "${{ github.event.inputs.cidr_block_pri }}",
-              "cidr_block_pub": "${{ github.event.inputs.cidr_block_pub }}",
+              "cidr_block_pri": ${{ github.event.inputs.cidr_block_pri }},
+              "cidr_block_pub": ${{ github.event.inputs.cidr_block_pub }},
               "enable_dns_support": "${{ fromJson(inputs.tf_plan_output).variables.enable_dns_support.value }}",
               "enable_dns_hostnames": "${{ fromJson(inputs.tf_plan_output).variables.enable_dns_hostnames.value }}"
             }
