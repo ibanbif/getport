@@ -15,3 +15,8 @@ variable "domain" {
   type    = string
   default = null
 }
+
+variable "containerInsights" {
+  type    = bool
+  default = false
+}

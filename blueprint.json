@@ -1,0 +1,82 @@
+{
+  "identifier": "ClusterResource",
+  "description": "This blueprint represents a cloud resource",
+  "title": "Cluster Resource",
+  "icon": "AWS",
+  "schema": {
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "Type of the cloud resource (e.g., virtual machine, database, storage, etc.)",
+        "title": "Type"
+      },
+      "provider": {
+        "type": "string",
+        "description": "Cloud service provider (e.g., AWS, Azure, GCP)",
+        "title": "Provider"
+      },
+      "region": {
+        "type": "string",
+        "description": "Region where the resource is deployed",
+        "title": "Region"
+      },
+      "link": {
+        "type": "string",
+        "title": "Link",
+        "format": "url"
+      },
+      "tags": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Custom tags associated with the resource",
+        "title": "Tags"
+      },
+      "status": {
+        "type": "string",
+        "description": "Current status of the resource (e.g., running, stopped, provisioning, etc.)",
+        "title": "Status"
+      },
+      "created_at": {
+        "type": "string",
+        "description": "Timestamp indicating when the resource was created",
+        "title": "Created At",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "description": "Timestamp indicating when the resource was last updated",
+        "title": "Updated At",
+        "format": "date-time"
+      },
+      "project": {
+        "type": "string",
+        "title": "project"
+      },
+      "env": {
+        "type": "string",
+        "title": "env",
+        "enum": [
+          "dev",
+          "qas",
+          "prd"
+        ],
+        "enumColors": {
+          "dev": "lightGray",
+          "qas": "lightGray",
+          "prd": "lightGray"
+        }
+      },
+      "containerInsights": {
+        "type": "boolean",
+        "title": "containerInsights"
+      }
+    },
+    "required": []
+  },
+  "mirrorProperties": {},
+  "calculationProperties": {},
+  "aggregationProperties": {},
+  "relations": {}
+}

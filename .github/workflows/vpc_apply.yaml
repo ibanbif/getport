@@ -78,13 +78,7 @@ jobs:
           cd terraform-artifact
           terraform init -backend-config=config.remote.tfbackend
           terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
-          echo "VPC_ID=$(terraform output vpc)" >> $GITHUB_ENV
-
-
-
-
-
-
+          echo "VPC_ID=$(terraform output vpc | cut -d '"' -f2)" >> $GITHUB_ENV
 
       - name: Update Port on status of applying terraform resource (success)
         uses: port-labs/port-github-action@v1
