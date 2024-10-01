@@ -4,7 +4,8 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = var.enable_dns_hostnames
 
   tags = {
-    Name = "${var.project}-${var.env}"
+    Name    = "${var.project}-${var.env}"
+    project = var.project
   }
 }
 
@@ -13,7 +14,8 @@ resource "aws_eip" "main" {
   domain = "vpc"
 
   tags = {
-    Name = "${var.project}-${var.env}"
+    Name    = "${var.project}-${var.env}"
+    project = var.project
   }
 }
 
@@ -21,7 +23,8 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.project}-${var.env}"
+    Name    = "${var.project}-${var.env}"
+    project = var.project
   }
 }
 
@@ -33,8 +36,9 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.project}-${var.env}-private-${element(local.aws_availability_zones, count.index)}"
-    Tier = "private"
+    Name    = "${var.project}-${var.env}-private-${element(local.aws_availability_zones, count.index)}"
+    Tier    = "private"
+    project = var.project
   }
 }
 
@@ -46,8 +50,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.project}-${var.env}-public-${element(local.aws_availability_zones, count.index)}"
-    Tier = "public"
+    Name    = "${var.project}-${var.env}-public-${element(local.aws_availability_zones, count.index)}"
+    Tier    = "public"
+    project = var.project
   }
 }
 
@@ -57,7 +62,8 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = element(aws_subnet.public.*.id, count.index)
 
   tags = {
-    Name = "${var.project}-${var.env}-${element(local.aws_availability_zones, count.index)}"
+    Name    = "${var.project}-${var.env}-${element(local.aws_availability_zones, count.index)}"
+    project = var.project
   }
 }
 
@@ -71,7 +77,8 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${var.project}-${var.env}-private-${element(local.aws_availability_zones, count.index)}"
+    Name    = "${var.project}-${var.env}-private-${element(local.aws_availability_zones, count.index)}"
+    project = var.project
   }
 }
 
@@ -90,7 +97,8 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.project}-${var.env}-public"
+    Name    = "${var.project}-${var.env}-public"
+    project = var.project
   }
 }
 
