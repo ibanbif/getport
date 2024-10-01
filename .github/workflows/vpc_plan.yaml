@@ -1,4 +1,4 @@
-name: Plan a VPC Resource
+name: VPC Resource - Terraform Plan
 on:
   workflow_dispatch:
     inputs:
