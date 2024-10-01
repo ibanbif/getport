@@ -1,4 +1,4 @@
-name: Destroy a Cloud Resource using Terraform
+name: Destroy a VPC Resource
 on:
   workflow_dispatch:
     inputs:

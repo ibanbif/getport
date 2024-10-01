@@ -1,4 +1,4 @@
-name: Apply a Cloud Resource using Terraform
+name: Apply a VPC Resource
 on:
   workflow_dispatch:
     inputs:
