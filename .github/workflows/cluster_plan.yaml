@@ -68,7 +68,7 @@ jobs:
         run: |
           cd terraform/cluster/
           terraform init -backend-config=config.remote.tfbackend
-          curl -s --header "Authorization: Bearer ${{ secrets.TF_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"type":"workspaces","attributes":{"execution-mode":"local"}}}' "https://app.terraform.io/api/v2/organizations/punkerside/workspaces/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}"
+          curl -s --header "Authorization: Bearer ${{ secrets.TF_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"type":"workspaces","attributes":{"execution-mode":"local"}}}' "https://app.terraform.io/api/v2/organizations/punkerside/workspaces/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}-cluster"
           terraform validate
           terraform plan -input=false -out=tfplan-${{fromJson(inputs.port_context).runId}}
           terraform show -json tfplan-${{fromJson(inputs.port_context).runId}} > tfplan.json
