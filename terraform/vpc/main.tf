@@ -5,7 +5,8 @@ resource "aws_vpc" "main" {
 
   tags = {
     Name    = "${var.project}-${var.env}"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -15,7 +16,8 @@ resource "aws_eip" "main" {
 
   tags = {
     Name    = "${var.project}-${var.env}"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -24,7 +26,8 @@ resource "aws_internet_gateway" "main" {
 
   tags = {
     Name    = "${var.project}-${var.env}"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -38,7 +41,8 @@ resource "aws_subnet" "private" {
   tags = {
     Name    = "${var.project}-${var.env}-private-${element(local.aws_availability_zones, count.index)}"
     Tier    = "private"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -52,7 +56,8 @@ resource "aws_subnet" "public" {
   tags = {
     Name    = "${var.project}-${var.env}-public-${element(local.aws_availability_zones, count.index)}"
     Tier    = "public"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -63,7 +68,8 @@ resource "aws_nat_gateway" "main" {
 
   tags = {
     Name    = "${var.project}-${var.env}-${element(local.aws_availability_zones, count.index)}"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -78,7 +84,8 @@ resource "aws_route_table" "private" {
 
   tags = {
     Name    = "${var.project}-${var.env}-private-${element(local.aws_availability_zones, count.index)}"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
@@ -98,7 +105,8 @@ resource "aws_route_table" "public" {
 
   tags = {
     Name    = "${var.project}-${var.env}-public"
-    project = var.project
+    Project = var.project
+    Env     = var.env
   }
 }
 
