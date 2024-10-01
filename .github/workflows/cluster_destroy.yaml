@@ -1,4 +1,4 @@
-name: VPC Resource - Terraform Destroy
+name: Cluster Resource - Terraform Destroy
 on:
   workflow_dispatch:
     inputs:
