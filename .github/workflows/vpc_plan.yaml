@@ -5,24 +5,31 @@ on:
       project:
         type: string
         description: None
+        required: true
       env:
         type: string
         description: None
+        required: true
       cidr_block_vpc:
         type: string
         description: None
+        required: true
       cidr_block_pri:
         type: string
         description: None
+        required: true
       cidr_block_pub:
         type: string
         description: None
+        required: true
       enable_dns_support:
         type: boolean
         description: None
+        required: true
       enable_dns_hostnames:
         type: boolean
         description: None
+        required: true
       port_context:
         required: true
         description: None

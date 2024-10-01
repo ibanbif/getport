@@ -5,15 +5,19 @@ on:
       project:
         type: string
         description: None
+        required: true
       env:
         type: string
         description: None
+        required: true
       service:
         type: string
         description: None
+        required: true
       domain:
         type: string
         description: None
+        required: true
       containerInsights:
         type: string
         description: None
