@@ -10,10 +10,6 @@ on:
         type: string
         description: None
         required: true
-      service:
-        type: string
-        description: None
-        required: true
       domain:
         type: string
         description: None
@@ -66,7 +62,6 @@ jobs:
         env:
           TF_VAR_project: "${{ github.event.inputs.project }}"
           TF_VAR_env: "${{ github.event.inputs.env }}"
-          TF_VAR_service: "${{ github.event.inputs.service }}"
           TF_VAR_domain: "${{ github.event.inputs.domain }}"
           TF_VAR_containerInsights: "${{ github.event.inputs.containerInsights }}"
           TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
