@@ -1,0 +1,153 @@
+name: Cluster Resource - Terraform Plan
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        type: string
+        description: None
+      env:
+        type: string
+        description: None
+      service:
+        type: string
+        description: None
+      domain:
+        type: string
+        description: None
+      port_context:
+        required: true
+        description: None
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log starting of resource creation 
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              Se creara el recurso con nombre: ${{ github.event.inputs.project }}-${{ github.event.inputs.env }} ... ⛴️
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          aws-region: '${{ secrets.AWS_REGION }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.6
+
+      - name: Terraform Backend
+        id: backend
+        run: |
+          sed -i 's/workspaceName/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}/g' terraform/config.remote.tfbackend
+          sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
+          mv terraform/config.remote.tfbackend terraform/cluster/
+          mv terraform/terraformrc ${HOME}/.terraformrc
+
+      - name: Terraform Plan
+        id: plan
+        env:
+          TF_VAR_project: "${{ github.event.inputs.project }}"
+          TF_VAR_env: "${{ github.event.inputs.env }}"
+          TF_VAR_service: "${{ github.event.inputs.service }}"
+          TF_VAR_domain: "${{ github.event.inputs.domain }}"
+          TF_VAR_aws_region: "${{ secrets.AWS_REGION }}"
+        run: |
+          cd terraform/cluster/
+          terraform init -backend-config=config.remote.tfbackend
+          curl -s --header "Authorization: Bearer ${{ secrets.TF_TOKEN }}" --header "Content-Type: application/vnd.api+json" --request PATCH --data '{"data":{"type":"workspaces","attributes":{"execution-mode":"local"}}}' "https://app.terraform.io/api/v2/organizations/punkerside/workspaces/${{ github.event.inputs.project }}-${{ github.event.inputs.env }}"
+          terraform validate
+          terraform plan -input=false -out=tfplan-${{fromJson(inputs.port_context).runId}}
+          terraform show -json tfplan-${{fromJson(inputs.port_context).runId}} > tfplan.json
+
+      - name: Save Terraform Plan JSON to Environment Variable
+        id: save-plan-json
+        run: |
+          cd terraform/cluster/
+          TF_PLAN_JSON=$(<tfplan.json)
+          echo "TF_PLAN_JSON=$TF_PLAN_JSON" >> $GITHUB_ENV
+          
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        id: artifact-upload-step
+        with:
+          name: tfplan-${{fromJson(inputs.port_context).runId}}
+          path: terraform/cluster/
+          retention-days: 7
+      
+      - name: Update Port on successful plan and upload of terraform resource
+        if: ${{ steps.plan.outcome == 'success' && steps.artifact-upload-step.outcome == 'success' }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              recurso planificado con éxito y cargado en el artefacto de GitHub. Se procede a solicitar la aprobación para aplicar el plan: ${{ steps.plan.outputs.stdout }} ✅
+      
+      - name: Update Port on unsuccessful plan of terraform resource
+        if: ${{ steps.plan.outcome != 'success' || steps.artifact-upload-step.outcome != 'success' }}
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              se produjo un error al planificar o guardar el recurso Terraform. Aborting request to approve the plan
+
+      - name: Request approval to apply Terraform resource
+        if: ${{ steps.plan.outcome == 'success' && steps.artifact-upload-step.outcome == 'success' }}
+        id: request-tf-approval
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: CREATE_RUN
+          icon: GithubActions
+          blueprint: service
+          action: cluster_apply
+          properties: |-
+            {
+              "port_run_identifier": "${{ fromJson(inputs.port_context).runId }}",
+              "artifact_identifier": "${{ steps.artifact-upload-step.outputs.artifact-id }}",
+              "tf_plan_output": ${{ env.TF_PLAN_JSON }}
+            }
+    
+      - name: Log message to update Port on the status of the TF Apply request (success)
+        uses: port-labs/port-github-action@v1
+        if: ${{ steps.request-tf-approval.outcome == 'success'}}
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              la solicitud para aprovisionar y aplicar el recurso en la nube se ha enviado al equipo de aprobación. El estado de la solicitud se compartirá en el registro de acciones
+
+      - name: Log message to update Port on the status of the TF Apply request (failure)
+        uses: port-labs/port-github-action@v1
+        if: ${{ steps.request-tf-approval.outcome != 'success'}}
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              la solicitud para aprovisionar y aplicar el recurso en la nube no se ha enviado al equipo de aprobación debido a un error que ocurrió durante los pasos de creación

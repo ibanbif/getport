@@ -1,0 +1,129 @@
+name: Cluster Resource - Terraform Apply
+on:
+  workflow_dispatch:
+    inputs:
+      port_run_identifier:
+        type: string
+        required: true
+        description: none
+      artifact_identifier:
+        type: string
+        required: true
+        description: none
+      tf_plan_output:
+        type: string
+        description: none
+      port_context:
+        required: true
+        description: none
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log starting of cloud resource creation 
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              Aprovisionar un recurso en la nube previamente planificado en Port con ID de ejecución: ${{ github.event.inputs.port_run_identifier }} ... ⛴️
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          aws-region: '${{ secrets.AWS_REGION }}'
+
+      - name: Download Terraform plan artifact from the previous workflow run
+        run: |          
+          mkdir terraform-artifact
+          cd terraform-artifact
+          artifact_url=$(curl -sSL -I -H "Authorization: Bearer ${{ secrets.MY_GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ github.event.inputs.artifact_identifier }}/zip" | grep -i "location:" | awk '{print $2}' | tr -d '\r')
+          curl -sSL -o terraform-artifact.zip "$artifact_url"
+          if [ $? -ne 0 ]; then
+            echo "Failed to download artifact. Exiting."
+            exit 1
+          fi
+          unzip -qq terraform-artifact.zip
+          if [ $? -ne 0 ]; then
+            echo "Failed to extract artifact. Exiting."
+            exit 1
+          fi
+        
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.6
+
+      - name: Terraform Backend
+        id: backend
+        run: |
+          sed -i 's/TF_TOKEN/${{ secrets.TF_TOKEN }}/g' terraform/terraformrc
+          mv terraform/terraformrc ${HOME}/.terraformrc
+
+      - name: Terraform apply resource
+        id: tf-apply
+        run: |
+          cd terraform-artifact
+          terraform init -backend-config=config.remote.tfbackend
+          terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
+
+      - name: Update Port on status of applying terraform resource (success)
+        uses: port-labs/port-github-action@v1
+        if: ${{steps.tf-apply.outcome == 'success'}}
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              recurso en la nube aprobado y aprovisionado exitosamente ✅
+
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "::set-output name=current_time::$(date -u +'%Y-%m-%dT%H:%M:%S.%3NZ')"
+
+      - name: Create cloud resource in Port
+        uses: port-labs/port-github-action@v1
+        if: ${{steps.tf-apply.outcome == 'success'}}
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: UPSERT
+          identifier: ${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}
+          team: '["cloud"]'
+          blueprint: ClusterResource
+          properties: |-
+            {
+              "type": "network",
+              "provider": "AWS",
+              "region": "${{ secrets.AWS_REGION }}",
+              "link": "https://us-east-1.console.aws.amazon.com/ecs/v2/clusters/${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}/services?region=us-east-1",
+              "status": "active",
+              "created_at": "${{ steps.timestamp.outputs.current_time }}",
+              "project": "${{ fromJson(inputs.tf_plan_output).variables.project.value }}",
+              "env": "${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
+              "service": "${{ fromJson(inputs.tf_plan_output).variables.service.value }}",
+              "domain": "${{ fromJson(inputs.tf_plan_output).variables.domain.value }}"
+            }
+
+      - name: Update Port on status of applying terraform resource (failure)
+        uses: port-labs/port-github-action@v1
+        if: ${{steps.tf-apply.outcome != 'success'}}
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{fromJson(inputs.port_context).runId}}
+          logMessage: |
+              no se pudo aprovisionar el recurso en la nube
