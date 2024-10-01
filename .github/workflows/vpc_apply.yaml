@@ -78,6 +78,13 @@ jobs:
           cd terraform-artifact
           terraform init -backend-config=config.remote.tfbackend
           terraform apply tfplan-${{ github.event.inputs.port_run_identifier }}
+          echo "VPC_ID=$(terraform output vpc)" >> $GITHUB_ENV
+
+
+
+
+
+
 
       - name: Update Port on status of applying terraform resource (success)
         uses: port-labs/port-github-action@v1
@@ -111,7 +118,7 @@ jobs:
               "type": "network",
               "provider": "AWS",
               "region": "${{ secrets.AWS_REGION }}",
-              "link": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#vpcs:tag:Name=${{ fromJson(inputs.tf_plan_output).variables.project.value }}-${{ fromJson(inputs.tf_plan_output).variables.env.value }}",
+              "link": "https://us-east-1.console.aws.amazon.com/vpcconsole/home?region=us-east-1#VpcDetails:VpcId=${{ env.VPC_ID }}",
               "status": "active",
               "created_at": "${{ steps.timestamp.outputs.current_time }}",
               "project": "${{ fromJson(inputs.tf_plan_output).variables.project.value }}",
