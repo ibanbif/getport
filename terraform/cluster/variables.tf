@@ -4,11 +4,7 @@ variable "project" {
 
 variable "env" {
   type    = string
-  default = "prd"
-}
-
-variable "service" {
-  type = string
+  default = "dev"
 }
 
 variable "domain" {

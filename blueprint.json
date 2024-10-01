@@ -1,82 +1,35 @@
 {
-  "identifier": "ClusterResource",
-  "description": "This blueprint represents a cloud resource",
-  "title": "Cluster Resource",
-  "icon": "AWS",
-  "schema": {
-    "properties": {
-      "type": {
-        "type": "string",
-        "description": "Type of the cloud resource (e.g., virtual machine, database, storage, etc.)",
-        "title": "Type"
-      },
-      "provider": {
-        "type": "string",
-        "description": "Cloud service provider (e.g., AWS, Azure, GCP)",
-        "title": "Provider"
-      },
-      "region": {
-        "type": "string",
-        "description": "Region where the resource is deployed",
-        "title": "Region"
-      },
-      "link": {
-        "type": "string",
-        "title": "Link",
-        "format": "url"
-      },
-      "tags": {
-        "type": "object",
-        "additionalProperties": {
-          "type": "string"
-        },
-        "description": "Custom tags associated with the resource",
-        "title": "Tags"
-      },
-      "status": {
-        "type": "string",
-        "description": "Current status of the resource (e.g., running, stopped, provisioning, etc.)",
-        "title": "Status"
-      },
-      "created_at": {
-        "type": "string",
-        "description": "Timestamp indicating when the resource was created",
-        "title": "Created At",
-        "format": "date-time"
-      },
-      "updated_at": {
-        "type": "string",
-        "description": "Timestamp indicating when the resource was last updated",
-        "title": "Updated At",
-        "format": "date-time"
-      },
-      "project": {
-        "type": "string",
-        "title": "project"
-      },
-      "env": {
-        "type": "string",
-        "title": "env",
-        "enum": [
-          "dev",
-          "qas",
-          "prd"
-        ],
-        "enumColors": {
-          "dev": "lightGray",
-          "qas": "lightGray",
-          "prd": "lightGray"
-        }
-      },
-      "containerInsights": {
-        "type": "boolean",
-        "title": "containerInsights"
+  "identifier": "cluster_destroy",
+  "title": "Cluster Destroy",
+  "icon": "Terraform",
+  "trigger": {
+    "type": "self-service",
+    "operation": "DELETE",
+    "userInputs": {
+      "properties": {},
+      "required": [],
+      "order": []
+    },
+    "blueprintIdentifier": "ClusterResource"
+  },
+  "invocationMethod": {
+    "type": "GITHUB",
+    "org": "ibanbif",
+    "repo": "getport",
+    "workflow": "cluster_destroy.yaml",
+    "workflowInputs": {
+      "project": "{{ .entity.properties.project }}",
+      "env": "{{ .entity.properties.env }}",
+      "domain": "{{ .entity.properties.domain }}",
+      "containerInsights": "{{ .entity.properties.containerInsights }}",
+      "port_context": {
+        "blueprint": "{{.action.blueprint}}",
+        "entity": "{{.entity}}",
+        "runId": "{{.run.id}}",
+        "trigger": "{{ .trigger }}"
       }
     },
-    "required": []
+    "reportWorkflowStatus": true
   },
-  "mirrorProperties": {},
-  "calculationProperties": {},
-  "aggregationProperties": {},
-  "relations": {}
+  "requiredApproval": false
 }
